@@ -1,0 +1,13 @@
+ID,Has_alternative,Bar,Fri_Sat,Hungry,Patrons,Price,Raining,Reservation,Type,Wait_estimate,Will_wait
+1,Y,N,N,Y,some,$$$,N,Y,French,0-10,Y
+2,Y,N,N,Y,full,$,N,N,Thai,30-60,N
+3,N,Y,N,N,some,$,N,N,Burger,0-10,Y
+4,Y,N,Y,Y,full,$,Y,N,Thai,30-Oct,Y
+5,Y,N,Y,N,full,$$$,N,Y,French,>60,N
+6,N,Y,N,Y,some,$$,Y,Y,Italian,0-10,Y
+7,N,Y,N,N,none,$,Y,N,Burger,0-10,N
+8,N,N,N,Y,some,$$,Y,Y,Thai,0-10,Y
+9,N,Y,Y,N,full,$,Y,N,Burger,>60,N
+10,Y,Y,Y,Y,full,$$$,N,Y,Italian,30-Oct,N
+11,N,N,N,N,none,$,N,N,Thai,0-10,N
+12,Y,Y,Y,Y,full,$,N,N,Burger,30-60,Y

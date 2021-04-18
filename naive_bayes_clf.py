@@ -1,3 +1,7 @@
+# Dong Cao
+# naive_bayes_clf.py
+
+
 import numpy as np
 from helper_functions import check_X, check_X_y
 

@@ -1,3 +1,7 @@
+# Dong Cao
+# ada_boost.py
+
+
 import numpy as np
 import copy
 import random

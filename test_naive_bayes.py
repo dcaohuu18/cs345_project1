@@ -2,9 +2,9 @@ import pandas as pd
 import argparse
 import numpy as np
 from naive_bayes_clf import NaiveBayesClassifier
-from sklearn.metrics import accuracy_score
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.preprocessing import OrdinalEncoder, LabelEncoder
+from helper_functions import leave_one_out_cv
 
 
 def test():
@@ -23,29 +23,11 @@ def test():
     le = LabelEncoder()
     y = le.fit_transform(y)
 
-    my_accuracy=0
-    skl_accuracy=0
+    my_cv_score = leave_one_out_cv(NaiveBayesClassifier, X, y)
+    print("My cv score: ", my_cv_score)
     
-    for i in range(len(X)): # Leave one out cross validation
-        X_train = np.delete(X, i, 0)
-        y_train = np.delete(y, i, 0)
-
-        X_test = np.array([X[i]])
-        y_test = np.array([y[i]])
-
-        my_bayes = NaiveBayesClassifier()
-        my_bayes.fit(X_train, y_train)
-
-        skl_bayes = MultinomialNB()
-        skl_bayes.fit(X_train, y_train)
-
-        my_accuracy += accuracy_score(y_test, my_bayes.predict(X_test))
-        skl_accuracy += accuracy_score(y_test, skl_bayes.predict(X_test))
-
-        print(my_bayes.predict(X_test), skl_bayes.predict(X_test), y_test)
-
-    print("My mean accuracy: ", my_accuracy/len(X))
-    print("Skl mean accuracy: ", skl_accuracy/len(X))
+    skl_cv_score = leave_one_out_cv(MultinomialNB, X, y)
+    print("Skl cv score: ", skl_cv_score)
 
 
 if __name__ == '__main__':

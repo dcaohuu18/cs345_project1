@@ -4,14 +4,19 @@ import random
 import bisect
 from collections import defaultdict
 import operator
+from helper_functions import check_X, check_X_y
 
 
 class DecisionStump:
     def __init__(self):
+        self.fit_called = False
         pass
 
     def fit(self, X, y):
+        self.fit_called = True
+
         # Check that X and y have correct shape
+        X, y = check_X_y(X, y)
 
         self.classes_rows = {}
         self.classes_ = np.unique(y)
@@ -62,9 +67,11 @@ class DecisionStump:
         return self
 
     def predict(self, X):
-        # Check is fit() had been called
+        # Check if fit() had been called
+        assert self.fit_called==True, "fit() has not been called"
 
         # Input validation
+        X = check_X(X)
 
         predict_array = []
 
@@ -84,10 +91,14 @@ class AdaBoost:
         self.learner_num = learner_num # total number of small, weak learners used
         self.learner_obj = learner_type(**learner_kwargs)
         self.learner_say_dict = {} # key is learner, value is its amount of say in the final classification
+        self.fit_called = False
 
 
     def fit(self, X, y):
+        self.fit_called = True
+
         # Check that X and y have correct shape
+        X, y = check_X_y(X, y)
 
         # assign weight to each sample/row in the original dataset to specify its "importance"
         # at first, they're all equally important
@@ -172,9 +183,11 @@ class AdaBoost:
         return max(votes_dict.items(), key=operator.itemgetter(1))[0]   
 
     def predict(self, X):
-        # Check is fit() had been called
+        # Check if fit() had been called
+        assert self.fit_called==True, "fit() has not been called"
 
         # Input validation
+        X = check_X(X)
         
         predict_array = []
 
@@ -184,41 +197,3 @@ class AdaBoost:
 
         return np.array(predict_array)
 
-
-if __name__ == '__main__':
-    from sklearn.metrics import accuracy_score
-    from sklearn.preprocessing import OrdinalEncoder, LabelEncoder
-    import pandas as pd
-
-    df = pd.read_csv('play_tennis.csv')
-    X = np.array(df.iloc[:, 1:-1])
-    y = np.array(df.iloc[:, -1])
-
-    oe = OrdinalEncoder()
-    X = oe.fit_transform(X)
-
-    le = LabelEncoder()
-    y = le.fit_transform(y)
-
-    max_accuracy=0
-    
-    for i in range(100):
-        accuracy_sum=0
-        for i in range(len(X)): # Leave one out cross validation
-            X_train = np.delete(X, i, 0)
-            y_train = np.delete(y, i, 0)
-
-            X_test = np.array([X[i]])
-            y_test = np.array([y[i]])
-
-            stump_clf = AdaBoost(learner_num=10)
-            stump_clf.fit(X_train, y_train)
-
-            #print(stump_clf.predict(X_test))
-
-            accuracy_sum += accuracy_score(y_test, stump_clf.predict(X_test))
-        
-        if (accuracy_sum/len(X)) > max_accuracy:
-            max_accuracy = accuracy_sum/len(X)
-
-    print("Max mean accuracy: ", max_accuracy)

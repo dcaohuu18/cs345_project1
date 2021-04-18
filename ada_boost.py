@@ -97,57 +97,64 @@ class AdaBoost:
         # can be selected and appear more than once in the resampled version
         # the higher the weight of a sample/row in the original dataset (recorded in self.sample_weights) is
         # the more frequently it will appear in the resampled version
+        # however, the weights of all the rows in the resampled version, once selected, are (always) equal
+        resampled_weights = np.array([1/len(X) for r in range(len(X))])
 
         for i in range(self.learner_num):
             if i==0:
                 # no resampling in the 1st round:                
-                resampled_X, resampled_y = X, y
+                resampled_idx, resampled_X, resampled_y = np.array(range(len(X))), X, y
+                # resampled_idx contains the indexes in the original dataset 
+                # of the rows in the resampled version
             else:
-                resampled_X, resampled_y = self.resample(X, y)
+                resampled_idx, resampled_X, resampled_y = self.resample(X, y)
             
             learner_i = copy.deepcopy(self.learner_obj)
-            learner_i.fit(resampled_X, resampled_y) # Note: we fit on the resampled version!
+            learner_i.fit(resampled_X, resampled_y)
 
-            learner_i_preds = learner_i.predict(X)
+            learner_i_preds = learner_i.predict(resampled_X)
             # the total error is the sum of the weights associated with the incorrectly classified rows
             # we add a small error term to make sure it's never equal to 0 or 1, 
             # otherwise, it will mess up the amount of say formula
-            tot_error = abs( self.sample_weights[learner_i_preds!=y].sum() - (1/(100*len(X))) )
+            tot_error = abs( resampled_weights[learner_i_preds!=resampled_y].sum() - (1/(100*len(resampled_X))) )
             # apply the formula to get this learner's amount of say:
             learner_i_say_amt = 0.5*np.log( (1-tot_error)/tot_error )
             
             self.learner_say_dict[learner_i] = learner_i_say_amt
 
-            self.update_sample_weights(learner_i_preds, y, learner_i_say_amt)
+            self.update_sample_weights(resampled_idx, learner_i_preds, resampled_y, learner_i_say_amt)
 
         # Return the classifier
         return self
 
-    def update_sample_weights(self, learner_i_preds, y, learner_i_say_amt):
+    def update_sample_weights(self, resampled_idx, learner_i_preds, resampled_y, learner_i_say_amt):
+        # Note: we only update the weight of each row in the original dataset ONCE
+        # even though there may be multiple copies of it in the resampled version
+
         # increase the weight of the incorrect guesses:
-        for wrong_wei_idx in [learner_i_preds!=y]:
+        for wrong_wei_idx in np.unique(resampled_idx[learner_i_preds!=resampled_y]):
             self.sample_weights[wrong_wei_idx] *= np.exp(learner_i_say_amt)
         # decrease the weight of the correct guesses:
-        for right_wei_idx in [learner_i_preds==y]:
+        for right_wei_idx in np.unique(resampled_idx[learner_i_preds==resampled_y]):
             self.sample_weights[right_wei_idx] *= np.exp(-learner_i_say_amt) # raised to a negative power
         # normalize the weights so they add up to 1:
         self.sample_weights /= self.sample_weights.sum()
 
     def resample(self, X, y):
         cumulative_weights = np.cumsum(self.sample_weights)
-        resampled_X = []
-        resampled_y = []
+        resampled_idx = []
         for i in range(len(X)):
             # select a random number between 0 and 1
             rand_num = random.uniform(0,1)
             # find which "range" this random number belongs to
-            # then pick the corresponding row 
+            # then pick the corresponding row index
             # Note: the higher the weight of a row, the larger its range
-            resampled_idx = bisect.bisect(cumulative_weights, rand_num)  
-            resampled_X.append(X[resampled_idx])
-            resampled_y.append(y[resampled_idx])
+            chosen_row_idx = bisect.bisect(cumulative_weights, rand_num)  
+            resampled_idx.append(chosen_row_idx)
 
-        return np.array(resampled_X), np.array(resampled_y)
+        resampled_idx = np.array(resampled_idx)
+
+        return resampled_idx, X[resampled_idx], y[resampled_idx]
 
     def predict_single(self, x_row):
         votes_dict = defaultdict(int) 

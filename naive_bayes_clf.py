@@ -1,13 +1,18 @@
 import numpy as np
+from helper_functions import check_X, check_X_y
 
 
 class NaiveBayesClassifier():
     def __init__(self, alpha=1):
         self.alpha = alpha
         self.classes_dict = {}
+        self.fit_called = False
 
     def fit(self, X, y):
+        self.fit_called = True
+
         # Check that X and y have correct shape
+        X, y = check_X_y(X, y)
         
         for class_ in np.unique(y):
             class_rows = X[y==class_] # get the array of feature rows that belong to each class
@@ -52,9 +57,11 @@ class NaiveBayesClassifier():
         return max_prob_class
 
     def predict(self, X):
-        # Check is fit() had been called
+        # Check if fit() had been called
+        assert self.fit_called==True, "fit() has not been called"
 
         # Input validation
+        X = check_X(X)
 
         predict_array = []
 
